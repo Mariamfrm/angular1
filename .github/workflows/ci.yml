@@ -1,27 +1,45 @@
-name: CI Pipeline
-
+name: Angular CI/CD with SonarCloud
 on:
-  push:
+  push: 
+    branches:
+      - main 
+  pull_request:
     branches:
       - main
-
 jobs:
-  build:
+  build-and-analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
         with:
-          node-version: '16'
-
+          fetch-depth: 0   
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
       - name: Install dependencies
         run: npm install
-
       - name: Run tests
-        run: npm test
-
-      - name: Build Angular App
+        run: npm run test -- --watch=false --browsers=ChromeHeadless
+      - name: Build Angular project
         run: npm run build
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - name: Install SonarScanner
+        run: npm install -g sonar-scanner
+      - name: Run SonarCloud analysis
+        run: sonar-scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
+      - name: Install SonarScanner
+        run: npm install -g sonar-scanner
+      - name: Run SonarCloud analysis
+        run: sonar-scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
